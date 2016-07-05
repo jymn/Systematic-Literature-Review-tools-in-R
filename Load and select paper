@@ -1,0 +1,75 @@
+####Systematic Review Literature####
+
+###TRID###########
+library(XML)
+
+
+##Cargando los datos em xml
+Tot=0
+
+N<-matrix(c("TRIDXML_bicyclists",
+            "TRIDXML_bicycling",
+            "TRIDXML_bike",
+            "TRIDXML_bikeway",
+            "TRIDXML_biking",
+            "TRIDXML_cycle_paths",
+            "TRIDXML_cycling",
+            "TRIDXML_bike_paths",
+            "TRIDXML_bicycle",
+            "TRIDXML_cycleway"))
+M<-matrix(c("infrastructure.xml","urban.xml","project.xml", "design.xml"))
+
+P<-matrix(0, nrow=length(N)*length(M),ncol=1)
+k=0
+for (i in 1:length(N)) { 
+  for (j in 1:length(M)) {
+    if (j>0){k=k+1}
+    P[k]<-paste(N[i],M[j], sep="_")
+  }}
+
+for (inic in 1:(length(N)*length(M)))
+{
+  
+  # Parse the XML file
+  pfile <- htmlTreeParse(file = as.character(P[inic]),error = function (...) {}, useInternalNodes = T, trim=F)
+  
+  abstract<-xpathSApply(pfile, path = "//abstract", xmlValue)
+  author<-xpathSApply(pfile, path = "//author", xmlValue)
+  title<-xpathSApply(pfile, path = "//title", xmlValue)
+  term<-xpathSApply(pfile, path = "//term", xmlValue)
+  
+  n=length(abstract)
+  Tot=Tot+n
+  ##procurando em abstract
+  a1 <- grep("lanning", abstract)
+  a2 <- grep("nfrastructure", abstract)
+  a3 <- grep("esign", abstract)
+  a4 <- grep("roject", abstract)
+  a5 <- grep("rban", abstract)
+  
+  ##procurando em title
+  t1 <- grep("lanning", title)
+  t2 <- grep("nfrastructure", title)
+  t3 <- grep("esign", title)
+  t4 <- grep("roject", title)
+  t5 <- grep("rban", title)
+  
+  
+  puntos<-as.data.frame(table(c(a1,a2,a3,a4,a5,t1,t2,t3,t4,t5)))
+  
+  puntosor = puntos[order(puntos$Freq), ]
+  puntosor = tail(puntosor, 7)
+  puntosor = as.data.frame(puntosor[order(puntosor$Freq,decreasing=TRUE),])
+  
+  clasifica<-rbind(title[as.numeric(substr(puntosor$Var,1,5000))], puntosor$Freq)
+  clasifica<-t(clasifica)
+  clasifica<-as.matrix(clasifica)
+  res<-data.frame(clasifica)
+  if (inic==1)
+  {res1<-(data.frame(clasifica))} else 
+  {res1<-c(append(res1,res))}
+  
+}
+res2<-as.data.frame(c(res1))
+
+write.csv(res2, file ="C:/Users/javier/Desktop/clasifi7.csv")
